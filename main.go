@@ -25,7 +25,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	routes := getRoutes(pagesPath, wd)
+	routes, err := getRoutes(pagesPath, wd)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	portStr := fmt.Sprintf(":%d", *port)
 	err = http.ListenAndServe(portStr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"path"
 	"strings"
@@ -17,19 +16,23 @@ type route struct {
 	urlpath  string
 }
 
-func getRoutes(p string, wd string) []route {
+func getRoutes(p string, wd string) ([]route, error) {
 	var routes []route
 
 	dir, err := os.ReadDir(p)
 	if err != nil {
-		log.Fatal(err)
+		return routes, err
 	}
 
 	for _, file := range dir {
 		filepath := path.Join(p, file.Name())
 
 		if file.IsDir() {
-			nestedRoutes := getRoutes(filepath, wd)
+			nestedRoutes, err := getRoutes(filepath, wd)
+			if err != nil {
+				return routes, err
+			}
+
 			routes = append(routes, nestedRoutes...)
 			continue
 		}
@@ -57,5 +60,5 @@ func getRoutes(p string, wd string) []route {
 		routes = append(routes, route)
 	}
 
-	return routes
+	return routes, nil
 }
