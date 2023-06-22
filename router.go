@@ -34,7 +34,12 @@ func getRoutes(p string, wd string) []route {
 			continue
 		}
 
-		fileUrlPath := strings.ReplaceAll(filepath, path.Ext(filepath), "")
+		fileExt := path.Ext(filepath)
+		if fileExt != ".html" {
+			continue
+		}
+
+		fileUrlPath := strings.ReplaceAll(filepath, fileExt, "")
 
 		wdWithPagesDir := path.Join(wd, PagesDir)
 		urlpath := strings.ReplaceAll(fileUrlPath, wdWithPagesDir, "")
