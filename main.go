@@ -28,7 +28,7 @@ func main() {
 	routes := getRoutes(pagesPath, wd)
 
 	portStr := fmt.Sprintf(":%d", *port)
-	http.ListenAndServe(portStr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	err = http.ListenAndServe(portStr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		route := matchRoute(r, routes)
 		if route == nil {
 			w.WriteHeader(404)
@@ -40,6 +40,9 @@ func main() {
 			fmt.Fprintf(w, "error: %v", err)
 		}
 	}))
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func matchRoute(r *http.Request, routes []route) *route {
