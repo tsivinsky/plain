@@ -29,18 +29,29 @@ func main() {
 
 	portStr := fmt.Sprintf(":%d", *port)
 	http.ListenAndServe(portStr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		uri := r.URL
+		route := matchRoute(r, routes)
+		if route == nil {
+			w.WriteHeader(404)
+			return
+		}
 
-		for _, route := range routes {
-			if route.urlpath == uri.Path || route.urlpath == uri.Path+"/" || route.urlpath+"/" == uri.Path {
-				err := renderHTMLFile(w, route.filepath)
-				if err != nil {
-					fmt.Fprintf(w, "error: %v", err)
-				}
-				return
-			}
+		err := renderHTMLFile(w, route.filepath)
+		if err != nil {
+			fmt.Fprintf(w, "error: %v", err)
 		}
 	}))
+}
+
+func matchRoute(r *http.Request, routes []route) *route {
+	uri := r.URL
+
+	for _, route := range routes {
+		if route.urlpath == uri.Path || route.urlpath == uri.Path+"/" || route.urlpath+"/" == uri.Path {
+			return &route
+		}
+	}
+
+	return nil
 }
 
 func renderHTMLFile(w http.ResponseWriter, filepath string) error {
