@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"path"
 	"strings"
@@ -8,6 +9,7 @@ import (
 
 const (
 	PagesDir          = "pages"
+	StaticDir         = "public"
 	IndexPageFileName = "index"
 )
 
@@ -61,4 +63,23 @@ func getRoutes(p string, wd string) ([]route, error) {
 	}
 
 	return routes, nil
+}
+
+func getStaticFile(p string) ([]byte, error) {
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		return nil, err
+	}
+
+	f, err := os.OpenFile(p, os.O_RDONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
