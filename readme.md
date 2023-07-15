@@ -13,3 +13,11 @@ go install github.com/tsivinsky/plain@latest
 ```bash
 plain -p 5000
 ```
+
+### Pages
+
+Put html files inside `pages` directory and they will be available at corresponding routes.
+
+### Static files
+
+Create `public` directory and put static file there
