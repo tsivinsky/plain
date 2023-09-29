@@ -8,10 +8,13 @@ import (
 	"net/http"
 	"os"
 	"path"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 func main() {
 	port := flag.Int("p", 5000, "Port to run application on")
+	watch := flag.Bool("w", false, "Watch html files for changes")
 
 	flag.Parse()
 
@@ -28,6 +31,46 @@ func main() {
 	routes, err := getRoutes(pagesPath, wd)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if *watch {
+		watcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer watcher.Close()
+
+		fmt.Println("[plain]: started watching files")
+
+		go func() {
+			for {
+				select {
+				case event, ok := <-watcher.Events:
+					if !ok {
+						return
+					}
+
+					if event.Has(fsnotify.Create) || event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename) {
+						routes, err = getRoutes(pagesPath, wd)
+						if err != nil {
+							fmt.Printf("Error happened while updating routes list on file change: %s\n", err.Error())
+						}
+					}
+
+				case err, ok := <-watcher.Errors:
+					if !ok {
+						return
+					}
+
+					fmt.Printf("Error happened while watching files for changing: %s\n", err.Error())
+				}
+			}
+		}()
+
+		err = watcher.Add(pagesPath)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	portStr := fmt.Sprintf(":%d", *port)
