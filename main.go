@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strings"
 )
 
 func main() {
@@ -36,20 +35,7 @@ func main() {
 		route := matchRoute(r, routes)
 		if route == nil {
 			fp := path.Join(wd, StaticDir, r.URL.Path)
-			staticFile, err := getStaticFile(fp)
-			if err != nil {
-				w.WriteHeader(404)
-				return
-			}
-
-			mime := http.DetectContentType(staticFile)
-			if strings.Contains(mime, "text/plain") {
-				mime = getFileTypeByName(fp)
-			}
-
-			w.Header().Set("Content-Type", mime)
-
-			w.Write(staticFile)
+			http.ServeFile(w, r, fp)
 			return
 		}
 
@@ -89,19 +75,4 @@ func renderHTMLFile(w http.ResponseWriter, filepath string) error {
 	}
 
 	return nil
-}
-
-func getFileTypeByName(filename string) string {
-	ext := path.Ext(filename)
-
-	switch ext {
-	case ".css":
-		return "text/css"
-	case ".js":
-		return "application/javascript"
-	case ".json":
-		return "application/json"
-	}
-
-	return "text/plain"
 }
