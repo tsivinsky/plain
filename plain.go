@@ -11,22 +11,18 @@ import (
 )
 
 type Server struct {
-	Port  int
-	Watch bool
+	Port       int
+	WorkingDir string
+	Watch      bool
 }
 
 func (s *Server) Run() error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	pagesPath := path.Join(wd, PagesDir)
+	pagesPath := path.Join(s.WorkingDir, PagesDir)
 	if _, err := os.Stat(pagesPath); os.IsNotExist(err) {
 		return err
 	}
 
-	routes, err := getRoutes(pagesPath, wd)
+	routes, err := getRoutes(pagesPath, s.WorkingDir)
 	if err != nil {
 		return err
 	}
@@ -49,7 +45,7 @@ func (s *Server) Run() error {
 					}
 
 					if event.Has(fsnotify.Create) || event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename) {
-						routes, err = getRoutes(pagesPath, wd)
+						routes, err = getRoutes(pagesPath, s.WorkingDir)
 						if err != nil {
 							fmt.Printf("Error happened while updating routes list on file change: %s\n", err.Error())
 						}
@@ -75,7 +71,7 @@ func (s *Server) Run() error {
 	err = http.ListenAndServe(portStr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		route := matchRoute(r, routes)
 		if route == nil {
-			fp := path.Join(wd, StaticDir, r.URL.Path)
+			fp := path.Join(s.WorkingDir, StaticDir, r.URL.Path)
 			http.ServeFile(w, r, fp)
 			return
 		}

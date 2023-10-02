@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 
 	"github.com/tsivinsky/plain"
 )
@@ -15,12 +16,23 @@ var (
 func main() {
 	flag.Parse()
 
-	s := &plain.Server{
-		Port:  *port,
-		Watch: *watch,
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	err := s.Run()
+	providedWd := flag.Arg(0)
+	if providedWd != "" {
+		wd = providedWd
+	}
+
+	s := &plain.Server{
+		Port:       *port,
+		Watch:      *watch,
+		WorkingDir: wd,
+	}
+
+	err = s.Run()
 	if err != nil {
 		log.Fatal(err)
 	}
