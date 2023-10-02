@@ -1,10 +1,8 @@
-package main
+package plain
 
 import (
-	"flag"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -12,31 +10,31 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-func main() {
-	port := flag.Int("p", 5000, "Port to run application on")
-	watch := flag.Bool("w", false, "Watch html files for changes")
+type Server struct {
+	Port  int
+	Watch bool
+}
 
-	flag.Parse()
-
+func (s *Server) Run() error {
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	pagesPath := path.Join(wd, PagesDir)
 	if _, err := os.Stat(pagesPath); os.IsNotExist(err) {
-		log.Fatal(err)
+		return err
 	}
 
 	routes, err := getRoutes(pagesPath, wd)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	if *watch {
+	if s.Watch {
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		defer watcher.Close()
 
@@ -69,11 +67,11 @@ func main() {
 
 		err = watcher.Add(pagesPath)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
 
-	portStr := fmt.Sprintf(":%d", *port)
+	portStr := fmt.Sprintf(":%d", s.Port)
 	err = http.ListenAndServe(portStr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		route := matchRoute(r, routes)
 		if route == nil {
@@ -88,8 +86,10 @@ func main() {
 		}
 	}))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 }
 
 func matchRoute(r *http.Request, routes []route) *route {
