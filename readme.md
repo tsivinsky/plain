@@ -4,14 +4,6 @@ File-based router written in Go
 
 ## Install
 
-### with cURL
-
-```bash
-curl -o plain https://api.fileasy.ru/plain
-```
-
-### with Go
-
 ```bash
 go install github.com/tsivinsky/plain/cmd/plain@latest
 ```
