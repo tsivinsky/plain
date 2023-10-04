@@ -10,6 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+// struct that stores server config and runs it
 type Server struct {
 	Host       string
 	Port       int
@@ -17,6 +18,7 @@ type Server struct {
 	Watch      bool
 }
 
+// Run runs server on Host:Port address
 func (s *Server) Run() error {
 	pagesPath := path.Join(s.WorkingDir, PagesDir)
 	if _, err := os.Stat(pagesPath); os.IsNotExist(err) {
