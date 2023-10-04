@@ -72,6 +72,8 @@ func (s *Server) Run() error {
 
 	portStr := fmt.Sprintf("%s:%d", s.Host, s.Port)
 	err = http.ListenAndServe(portStr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+
 		route := matchRoute(r, routes)
 		if route == nil {
 			fp := path.Join(s.WorkingDir, StaticDir, r.URL.Path)
