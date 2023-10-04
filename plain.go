@@ -11,6 +11,7 @@ import (
 )
 
 type Server struct {
+	Host       string
 	Port       int
 	WorkingDir string
 	Watch      bool
@@ -67,7 +68,7 @@ func (s *Server) Run() error {
 		}
 	}
 
-	portStr := fmt.Sprintf(":%d", s.Port)
+	portStr := fmt.Sprintf("%s:%d", s.Host, s.Port)
 	err = http.ListenAndServe(portStr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		route := matchRoute(r, routes)
 		if route == nil {

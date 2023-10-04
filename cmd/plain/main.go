@@ -10,6 +10,7 @@ import (
 
 var (
 	port  = flag.Int("p", 5000, "Port to run application on")
+	host  = flag.String("H", "localhost", "Host to run application on")
 	watch = flag.Bool("w", false, "Watch html files for changes")
 )
 
@@ -28,6 +29,7 @@ func main() {
 
 	s := &plain.Server{
 		Port:       *port,
+		Host:       *host,
 		Watch:      *watch,
 		WorkingDir: wd,
 	}
