@@ -30,8 +30,11 @@ func main() {
 	s := &plain.Server{
 		Port:       *port,
 		Host:       *host,
-		Watch:      *watch,
 		WorkingDir: wd,
+	}
+
+	if *watch {
+		go s.Watch()
 	}
 
 	err = s.Run()

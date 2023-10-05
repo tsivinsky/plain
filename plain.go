@@ -15,66 +15,30 @@ type Server struct {
 	Host       string
 	Port       int
 	WorkingDir string
-	Watch      bool
+
+	pagesPath string
+	routes    []route
 }
 
 // Run runs server on Host:Port address
 func (s *Server) Run() error {
-	pagesPath := path.Join(s.WorkingDir, PagesDir)
-	if _, err := os.Stat(pagesPath); os.IsNotExist(err) {
+	s.pagesPath = path.Join(s.WorkingDir, PagesDir)
+	if _, err := os.Stat(s.pagesPath); os.IsNotExist(err) {
 		return err
 	}
 
-	routes, err := getRoutes(pagesPath, s.WorkingDir)
+	var err error
+
+	s.routes, err = getRoutes(s.pagesPath, s.WorkingDir)
 	if err != nil {
 		return err
-	}
-
-	if s.Watch {
-		watcher, err := fsnotify.NewWatcher()
-		if err != nil {
-			return err
-		}
-		defer watcher.Close()
-
-		fmt.Println("[plain]: started watching files")
-
-		go func() {
-			for {
-				select {
-				case event, ok := <-watcher.Events:
-					if !ok {
-						return
-					}
-
-					if event.Has(fsnotify.Create) || event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename) {
-						routes, err = getRoutes(pagesPath, s.WorkingDir)
-						if err != nil {
-							fmt.Printf("Error happened while updating routes list on file change: %s\n", err.Error())
-						}
-					}
-
-				case err, ok := <-watcher.Errors:
-					if !ok {
-						return
-					}
-
-					fmt.Printf("Error happened while watching files for changing: %s\n", err.Error())
-				}
-			}
-		}()
-
-		err = watcher.Add(pagesPath)
-		if err != nil {
-			return err
-		}
 	}
 
 	portStr := fmt.Sprintf("%s:%d", s.Host, s.Port)
 	err = http.ListenAndServe(portStr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 
-		route := matchRoute(r, routes)
+		route := matchRoute(r, s.routes)
 		if route == nil {
 			fp := path.Join(s.WorkingDir, StaticDir, r.URL.Path)
 			http.ServeFile(w, r, fp)
@@ -91,6 +55,44 @@ func (s *Server) Run() error {
 	}
 
 	return nil
+}
+
+func (s *Server) Watch() error {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return err
+	}
+	defer watcher.Close()
+
+	err = watcher.Add(s.pagesPath)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("[plain]: started watching files")
+
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return nil
+			}
+
+			if event.Has(fsnotify.Create) || event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename) {
+				s.routes, err = getRoutes(s.pagesPath, s.WorkingDir)
+				if err != nil {
+					fmt.Printf("Error happened while updating routes list on file change: %s\n", err.Error())
+				}
+			}
+
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return nil
+			}
+
+			fmt.Printf("Error happened while watching files for changing: %s\n", err.Error())
+		}
+	}
 }
 
 func matchRoute(r *http.Request, routes []route) *route {
