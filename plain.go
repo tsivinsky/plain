@@ -34,8 +34,17 @@ func (s *Server) Run() error {
 		return err
 	}
 
-	portStr := fmt.Sprintf("%s:%d", s.Host, s.Port)
-	err = http.ListenAndServe(portStr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	err = s.listen()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Server) listen() error {
+	addr := fmt.Sprintf("%s:%d", s.Host, s.Port)
+	err := http.ListenAndServe(addr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 
 		route := matchRoute(r, s.routes)
@@ -50,11 +59,8 @@ func (s *Server) Run() error {
 			fmt.Fprintf(w, "error: %v", err)
 		}
 	}))
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func (s *Server) Watch() error {
