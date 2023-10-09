@@ -20,29 +20,37 @@ type Server struct {
 	routes    []route
 }
 
-// Run runs server on Host:Port address
-func (s *Server) Run() error {
-	s.pagesPath = path.Join(s.WorkingDir, PagesDir)
-	if _, err := os.Stat(s.pagesPath); os.IsNotExist(err) {
-		return err
+type Options struct {
+	Host       string
+	Port       int
+	WorkingDir string
+}
+
+// New initializes server with provided options
+func New(o Options) (*Server, error) {
+	pagesPath := path.Join(o.WorkingDir, PagesDir)
+	if _, err := os.Stat(pagesPath); os.IsNotExist(err) {
+		return nil, err
+	}
+
+	s := &Server{
+		Host:       o.Host,
+		Port:       o.Port,
+		WorkingDir: o.WorkingDir,
+		pagesPath:  pagesPath,
 	}
 
 	var err error
 
 	s.routes, err = getRoutes(s.pagesPath, s.WorkingDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = s.listen()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return s, nil
 }
 
-func (s *Server) listen() error {
+func (s *Server) Run() error {
 	addr := fmt.Sprintf("%s:%d", s.Host, s.Port)
 	err := http.ListenAndServe(addr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")

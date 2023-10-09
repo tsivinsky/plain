@@ -27,10 +27,13 @@ func main() {
 		wd = providedWd
 	}
 
-	s := &plain.Server{
-		Port:       *port,
+	s, err := plain.New(plain.Options{
 		Host:       *host,
+		Port:       *port,
 		WorkingDir: wd,
+	})
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	if *watch {
