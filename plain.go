@@ -2,7 +2,6 @@ package plain
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path"
@@ -50,6 +49,10 @@ func New(o Options) (*Server, error) {
 	return s, nil
 }
 
+func (s *Server) getStaticFile(fp string) string {
+	return path.Join(s.WorkingDir, StaticDir, fp)
+}
+
 func (s *Server) Run() error {
 	addr := fmt.Sprintf("%s:%d", s.Host, s.Port)
 	err := http.ListenAndServe(addr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -57,14 +60,9 @@ func (s *Server) Run() error {
 
 		route := matchRoute(r, s.routes)
 		if route == nil {
-			fp := path.Join(s.WorkingDir, StaticDir, r.URL.Path)
-			http.ServeFile(w, r, fp)
-			return
-		}
-
-		err := renderHTMLFile(w, route.filepath)
-		if err != nil {
-			fmt.Fprintf(w, "error: %v", err)
+			http.ServeFile(w, r, s.getStaticFile(r.URL.Path))
+		} else {
+			http.ServeFile(w, r, route.filepath)
 		}
 	}))
 
@@ -116,22 +114,6 @@ func matchRoute(r *http.Request, routes []route) *route {
 		if route.urlpath == uri.Path || route.urlpath == uri.Path+"/" || route.urlpath+"/" == uri.Path {
 			return &route
 		}
-	}
-
-	return nil
-}
-
-func renderHTMLFile(w http.ResponseWriter, filepath string) error {
-	f, err := os.OpenFile(filepath, os.O_RDONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	w.Header().Set("Content-Type", "text/html")
-	_, err = io.Copy(w, f)
-	if err != nil {
-		return err
 	}
 
 	return nil
