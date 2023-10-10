@@ -49,19 +49,9 @@ func getRoutes(p string, wd string) ([]route, error) {
 			continue
 		}
 
-		fileUrlPath := strings.ReplaceAll(filepath, fileExt, "")
-
-		wdWithPagesDir := path.Join(wd, PagesDir)
-		urlpath := strings.ReplaceAll(fileUrlPath, wdWithPagesDir, "")
-
-		// It's safe because we handle case if it's directory above
-		if strings.HasSuffix(urlpath, "index") {
-			urlpath = strings.ReplaceAll(urlpath, "index", "")
-		}
-
 		route := route{
 			filepath: filepath,
-			urlpath:  urlpath,
+			urlpath:  filePathToUrl(wd, filepath, fileExt),
 		}
 
 		route.data, err = readPageFile(filepath, fileExt)
@@ -73,6 +63,21 @@ func getRoutes(p string, wd string) ([]route, error) {
 	}
 
 	return routes, nil
+}
+
+func filePathToUrl(wd, filepath, ext string) string {
+	fileUrlPath := strings.ReplaceAll(filepath, ext, "")
+
+	wdWithPagesDir := path.Join(wd, PagesDir)
+	urlpath := strings.ReplaceAll(fileUrlPath, wdWithPagesDir, "")
+
+	// It's safe because we handle case if it's directory above
+	// so it won't replace directory called `index`, only file
+	if strings.HasSuffix(urlpath, "index") {
+		urlpath = strings.ReplaceAll(urlpath, "index", "")
+	}
+
+	return urlpath
 }
 
 func readPageFile(fp string, ext string) ([]byte, error) {
