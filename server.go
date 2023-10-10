@@ -22,6 +22,11 @@ func (s *Server) getStaticFile(fp string) string {
 	return path.Join(s.WorkingDir, StaticDir, fp)
 }
 
+func (s *Server) renderPage(w http.ResponseWriter, r *http.Request, data []byte) {
+	w.Header().Set("Content-Type", "text/html")
+	w.Write(data)
+}
+
 func (s *Server) Run() error {
 	addr := fmt.Sprintf("%s:%d", s.Host, s.Port)
 	err := http.ListenAndServe(addr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +36,7 @@ func (s *Server) Run() error {
 		if route == nil {
 			http.ServeFile(w, r, s.getStaticFile(r.URL.Path))
 		} else {
-			http.ServeFile(w, r, route.filepath)
+			s.renderPage(w, r, route.data)
 		}
 	}))
 
