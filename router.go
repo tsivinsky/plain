@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	PagesDir          = "pages"
-	StaticDir         = "public"
-	IndexPageFileName = "index"
+	pagesDir          = "pages"
+	staticDir         = "public"
+	indexPageFileName = "index"
 )
 
 type route struct {
@@ -68,7 +68,7 @@ func getRoutes(p string, wd string) ([]route, error) {
 func filePathToUrl(wd, filepath, ext string) string {
 	fileUrlPath := strings.ReplaceAll(filepath, ext, "")
 
-	wdWithPagesDir := path.Join(wd, PagesDir)
+	wdWithPagesDir := path.Join(wd, pagesDir)
 	urlpath := strings.ReplaceAll(fileUrlPath, wdWithPagesDir, "")
 
 	// It's safe because we handle case if it's directory above

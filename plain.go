@@ -13,7 +13,7 @@ type Options struct {
 
 // New initializes server with provided options
 func New(o Options) (*Server, error) {
-	pagesPath := path.Join(o.WorkingDir, PagesDir)
+	pagesPath := path.Join(o.WorkingDir, pagesDir)
 	if _, err := os.Stat(pagesPath); os.IsNotExist(err) {
 		return nil, err
 	}

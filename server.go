@@ -19,7 +19,7 @@ type Server struct {
 }
 
 func (s *Server) getStaticFile(fp string) string {
-	return path.Join(s.WorkingDir, StaticDir, fp)
+	return path.Join(s.WorkingDir, staticDir, fp)
 }
 
 func (s *Server) renderPage(w http.ResponseWriter, r *http.Request, data []byte) {
