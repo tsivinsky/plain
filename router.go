@@ -59,34 +59,34 @@ func getRoutes(p string, wd string) ([]route, error) {
 			urlpath = strings.ReplaceAll(urlpath, "index", "")
 		}
 
-		f, err := os.OpenFile(filepath, os.O_RDONLY, 0644)
-		if err != nil {
-			return nil, err
-		}
-
 		route := route{
 			filepath: filepath,
 			urlpath:  urlpath,
 		}
 
-		if fileExt == ".md" {
-			route.data, err = parseMarkdown(filepath)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			route.data, err = io.ReadAll(f)
-			if err != nil {
-				return nil, err
-			}
+		route.data, err = readPageFile(filepath, fileExt)
+		if err != nil {
+			return nil, err
 		}
-
-		f.Close()
 
 		routes = append(routes, route)
 	}
 
 	return routes, nil
+}
+
+func readPageFile(fp string, ext string) ([]byte, error) {
+	if ext == ".md" {
+		return parseMarkdown(fp)
+	}
+
+	f, err := os.OpenFile(fp, os.O_RDONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	return io.ReadAll(f)
 }
 
 func parseMarkdown(fp string) ([]byte, error) {
