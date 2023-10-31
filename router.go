@@ -65,14 +65,13 @@ func getRoutes(p string, wd string) ([]route, error) {
 	return routes, nil
 }
 
+// removes 'index' part from filename, so need to check if file is directory before calling this function
 func filePathToUrl(wd, filepath, ext string) string {
 	fileUrlPath := strings.ReplaceAll(filepath, ext, "")
 
 	wdWithPagesDir := path.Join(wd, pagesDir)
 	urlpath := strings.ReplaceAll(fileUrlPath, wdWithPagesDir, "")
 
-	// It's safe because we handle case if it's directory above
-	// so it won't replace directory called `index`, only file
 	if strings.HasSuffix(urlpath, "index") {
 		urlpath = strings.ReplaceAll(urlpath, "index", "")
 	}
