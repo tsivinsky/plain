@@ -18,8 +18,9 @@ type Server struct {
 	routes    []route
 }
 
-func (s *Server) getStaticFile(fp string) string {
-	return path.Join(s.WorkingDir, staticDir, fp)
+func (s *Server) serveStaticFile(w http.ResponseWriter, r *http.Request, filepath string) {
+	fullPath := path.Join(s.WorkingDir, staticDir, filepath)
+	http.ServeFile(w, r, fullPath)
 }
 
 func (s *Server) renderPage(w http.ResponseWriter, r *http.Request, data []byte) {
@@ -34,7 +35,7 @@ func (s *Server) Run() error {
 
 		route := matchRoute(r, s.routes)
 		if route == nil {
-			http.ServeFile(w, r, s.getStaticFile(r.URL.Path))
+			s.serveStaticFile(w, r, r.URL.Path)
 		} else {
 			s.renderPage(w, r, route.data)
 		}
