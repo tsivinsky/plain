@@ -65,7 +65,7 @@ func (s *Server) Watch() error {
 				return nil
 			}
 
-			if event.Has(fsnotify.Create) || event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename) {
+			if event.Has(fsnotify.Create) || event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename) || event.Has(fsnotify.Write) {
 				s.routes, err = getRoutes(s.pagesPath, s.WorkingDir)
 				if err != nil {
 					fmt.Printf("Error happened while updating routes list on file change: %s\n", err.Error())
