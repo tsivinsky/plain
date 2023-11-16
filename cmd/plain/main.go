@@ -49,7 +49,6 @@ func readPageFile(fp string) ([]byte, error) {
 	}
 
 	if ext == ".html" {
-
 		f, err := os.OpenFile(fp, os.O_RDONLY, 0644)
 		if err != nil {
 			return nil, err
