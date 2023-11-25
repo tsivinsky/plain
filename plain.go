@@ -6,9 +6,10 @@ import (
 )
 
 type Options struct {
-	Host       string
-	Port       int
-	WorkingDir string
+	Host         string
+	Port         int
+	WorkingDir   string
+	ReadPageFile ReadPageFileFunc
 }
 
 // New initializes server with provided options
@@ -19,15 +20,16 @@ func New(o Options) (*Server, error) {
 	}
 
 	s := &Server{
-		Host:       o.Host,
-		Port:       o.Port,
-		WorkingDir: o.WorkingDir,
-		pagesPath:  pagesPath,
+		Host:         o.Host,
+		Port:         o.Port,
+		WorkingDir:   o.WorkingDir,
+		pagesPath:    pagesPath,
+		readPageFile: o.ReadPageFile,
 	}
 
 	var err error
 
-	s.routes, err = getRoutes(s.pagesPath, s.WorkingDir)
+	s.routes, err = getRoutes(s.pagesPath, s.WorkingDir, s.readPageFile)
 	if err != nil {
 		return nil, err
 	}

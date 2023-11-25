@@ -2,9 +2,14 @@ package main
 
 import (
 	"flag"
+	"io"
 	"log"
 	"os"
+	"path"
 
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 	"github.com/tsivinsky/plain"
 )
 
@@ -13,6 +18,48 @@ var (
 	host  = flag.String("H", "localhost", "Host to run application on")
 	watch = flag.Bool("w", false, "Watch html files for changes")
 )
+
+func parseMarkdown(fp string) ([]byte, error) {
+	f, err := os.OpenFile(fp, os.O_RDONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	p := parser.NewWithExtensions(parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock)
+	doc := p.Parse(data)
+
+	r := html.NewRenderer(html.RendererOptions{
+		Flags: html.CommonFlags | html.HrefTargetBlank,
+	})
+
+	return markdown.Render(doc, r), nil
+}
+
+func readPageFile(fp string) ([]byte, error) {
+	ext := path.Ext(fp)
+
+	if ext == ".md" {
+		return parseMarkdown(fp)
+	}
+
+	if ext == ".html" {
+		f, err := os.OpenFile(fp, os.O_RDONLY, 0644)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		return io.ReadAll(f)
+	}
+
+	return nil, nil
+}
 
 func main() {
 	flag.Parse()
@@ -28,9 +75,10 @@ func main() {
 	}
 
 	s, err := plain.New(plain.Options{
-		Host:       *host,
-		Port:       *port,
-		WorkingDir: wd,
+		Host:         *host,
+		Port:         *port,
+		WorkingDir:   wd,
+		ReadPageFile: readPageFile,
 	})
 	if err != nil {
 		log.Fatal(err)

@@ -14,6 +14,8 @@ type Server struct {
 	Port       int
 	WorkingDir string
 
+	readPageFile ReadPageFileFunc
+
 	pagesPath string
 	routes    []route
 }
@@ -66,7 +68,7 @@ func (s *Server) Watch() error {
 			}
 
 			if event.Has(fsnotify.Create) || event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename) || event.Has(fsnotify.Write) {
-				s.routes, err = getRoutes(s.pagesPath, s.WorkingDir)
+				s.routes, err = getRoutes(s.pagesPath, s.WorkingDir, s.readPageFile)
 				if err != nil {
 					fmt.Printf("Error happened while updating routes list on file change: %s\n", err.Error())
 				}
